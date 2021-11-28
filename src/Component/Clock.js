@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 
 function Clock(){
@@ -19,6 +19,7 @@ function Clock(){
 
     }
 
+    useEffect(CurrnetClock);
     setInterval(CurrnetClock, 1000)
 
     const ClockStyle = {

@@ -1,15 +1,16 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+
 
 
 function TodoPaint(){
-
+    
     const savedToDos = localStorage.getItem("todolist")
     const parsedToDos = JSON.parse(savedToDos)
-
+    
     return (
         <div>
-            {parsedToDos.map(todos => (
-            <div>
+            {parsedToDos.map( todos => ( 
+                <div>
                 <span>{todos.text}</span>
                 <button>삭제</button>
             </div>  
@@ -18,15 +19,14 @@ function TodoPaint(){
     )
 }
 
-
 function Todo(){
-
-    const [TodoList, SetTodoList] = useState([{
-        text : '',
-        id : '',
-        result : ''
-    }])
-
+    
+    const [input, setInput] = useState({
+        text: '',
+        complete : ''
+    })
+    const [TodoList, SetTodoList] = useState([])
+    
     const InputStyle = {
         borderTop: "none",
         borderLeft: "none",
@@ -35,24 +35,38 @@ function Todo(){
         width: "500px",
         height: "60px"
     }
+    
+    useEffect( () => {
+        console.log(TodoList)
+        localStorage.setItem('todolist', JSON.stringify(TodoList))
+    }, [TodoList])
 
-    function handleToDoSubmit(e){
+
+    const handleToDoSubmit = (e) => {
+        
         e.preventDefault();
+        
+
         const taget = e.target.children[0]
         
+        const {text, complete} = input 
+
         const todo = {
-            text : taget.value,
+            text,
             id : Date.now(),
-            result : "false"
+            complete
         }
+        
+        console.log(todo)
 
         SetTodoList([...TodoList, todo])
 
-        console.log(TodoList)
-
-        saveTodoList()
-
         taget.value = ''
+
+        setInput({
+            text : '',
+            complete : false
+        })
 
     }
 
@@ -60,10 +74,24 @@ function Todo(){
         localStorage.setItem('todolist', JSON.stringify(TodoList))
     }
 
+    const handleOnChange = (e) => {
+        const input = e.target.value
+
+        setInput({
+            text : input,
+            complete : false
+        })
+
+    }
+
     return(
         <div style={{textAlign : "center"}}>
             <form onSubmit={handleToDoSubmit}>
-                <input type="text" style={InputStyle} placeholder="Write a To Do and Press Enter" />
+                <input
+                 onChange={handleOnChange}
+                 type="text"
+                 style={InputStyle} 
+                 placeholder="Write a To Do and Press Enter" />
             </form>
             <TodoPaint/>
         </div>

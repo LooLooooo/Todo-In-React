@@ -1,18 +1,46 @@
 import React, { useEffect, useState } from "react";
 
 
+function TodoPaint({TodoList, SetTodoList}){
 
-function TodoPaint(){
-    
-    const savedToDos = localStorage.getItem("todolist")
-    const parsedToDos = JSON.parse(savedToDos)
-    
+    useEffect( () => {
+        localStorage.setItem("TodoList",JSON.stringify(TodoList))
+    }, [TodoList])
+
+    const fontChange = (e) => {
+
+        const span = e.target
+        const id = e.target.parentElement.children[0]
+        const complete = e.target.parentElement.children[1]
+        
+        if(span.style.color === ""){
+            span.style.color = "darkgray"
+            complete.value = true
+        }else{
+            span.style.color = ""
+            complete.value = false
+        }
+        
+        SetTodoList(TodoList.map( (todo) =>
+            todo.id === parseInt(id.value) ? { ...todo, complete : complete.value } : todo
+            )
+        );
+
+    }
+
+    const deleteTodo = (e) => {
+        const id = e.target.parentElement.children[0]
+        SetTodoList(TodoList.filter(todo => todo.id !== parseInt(id.value)))
+    }
+
     return (
         <div>
-            {parsedToDos.map( todos => ( 
-                <div>
-                <span>{todos.text}</span>
-                <button>삭제</button>
+            {TodoList.map( (todos) => ( 
+            <div>
+                <input type="hidden" value={todos.id} />
+                <input type="hidden" value={todos.complete} />
+                <span onClick={fontChange}>{todos.text}</span>
+                <button onClick={deleteTodo}>삭제</button>
             </div>  
             ))}
         </div>
@@ -20,13 +48,12 @@ function TodoPaint(){
 }
 
 function Todo(){
-    
-    const [input, setInput] = useState({
-        text: '',
-        complete : ''
+
+    const [TodoList, SetTodoList] = useState(() => {
+        const localData = localStorage.getItem('TodoList')
+        return localData ? JSON.parse(localData) : []
     })
-    const [TodoList, SetTodoList] = useState([])
-    
+
     const InputStyle = {
         borderTop: "none",
         borderLeft: "none",
@@ -37,63 +64,41 @@ function Todo(){
     }
     
     useEffect( () => {
-        console.log(TodoList)
-        localStorage.setItem('todolist', JSON.stringify(TodoList))
+        localStorage.setItem("TodoList",JSON.stringify(TodoList))
     }, [TodoList])
 
-
+    
+    function saveTodoList(){
+        localStorage.setItem('todolist', JSON.stringify(TodoList))
+    }
+    
     const handleToDoSubmit = (e) => {
         
         e.preventDefault();
         
-
         const taget = e.target.children[0]
         
-        const {text, complete} = input 
-
         const todo = {
-            text,
+            text : taget.value,
             id : Date.now(),
-            complete
+            complete : false
         }
         
-        console.log(todo)
-
         SetTodoList([...TodoList, todo])
-
+        
         taget.value = ''
-
-        setInput({
-            text : '',
-            complete : false
-        })
-
-    }
-
-    function saveTodoList(){
-        localStorage.setItem('todolist', JSON.stringify(TodoList))
-    }
-
-    const handleOnChange = (e) => {
-        const input = e.target.value
-
-        setInput({
-            text : input,
-            complete : false
-        })
-
+        
     }
 
     return(
         <div style={{textAlign : "center"}}>
             <form onSubmit={handleToDoSubmit}>
                 <input
-                 onChange={handleOnChange}
                  type="text"
                  style={InputStyle} 
                  placeholder="Write a To Do and Press Enter" />
             </form>
-            <TodoPaint/>
+            <TodoPaint TodoList={TodoList} SetTodoList={SetTodoList}/>
         </div>
     )
 }

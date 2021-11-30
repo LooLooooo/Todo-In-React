@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useReducer, useState } from "react";
 
 
-function TodoPaint({TodoList, SetTodoList}){
+function TodoPaint({TodoList, dispatch}){
 
     useEffect( () => {
         localStorage.setItem("TodoList",JSON.stringify(TodoList))
@@ -10,7 +10,7 @@ function TodoPaint({TodoList, SetTodoList}){
     const fontChange = (e) => {
 
         const span = e.target
-        const id = e.target.parentElement.children[0]
+        const id = e.target.parentElement.children[0].value
         const complete = e.target.parentElement.children[1]
         
         if(span.style.color === ""){
@@ -21,16 +21,19 @@ function TodoPaint({TodoList, SetTodoList}){
             complete.value = false
         }
         
-        SetTodoList(TodoList.map( (todo) =>
-            todo.id === parseInt(id.value) ? { ...todo, complete : complete.value } : todo
-            )
-        );
+        dispatch({
+            type : 'complete',
+            id
+        })
 
     }
-
+   
     const deleteTodo = (e) => {
-        const id = e.target.parentElement.children[0]
-        SetTodoList(TodoList.filter(todo => todo.id !== parseInt(id.value)))
+        const id = e.target.parentElement.children[0].value
+        dispatch({
+            type : 'delete',
+            id
+        })
     }
 
     return (
@@ -47,12 +50,28 @@ function TodoPaint({TodoList, SetTodoList}){
     )
 }
 
+
+function reducer(state, action){
+    switch(action.type){
+        case 'add' :
+            return [...state, action.TodoList]
+        case 'complete' :   
+            return state.map( todo => 
+                todo.id === parseInt(action.id) ? { ...todo, complete : !todo.complete } : todo 
+            )
+        case 'delete' :
+            return state.filter( todo => todo.id !== parseInt(action.id))
+        default : 
+            return state
+    }
+}
+
 function Todo(){
 
-    const [TodoList, SetTodoList] = useState(() => {
-        const localData = localStorage.getItem('TodoList')
-        return localData ? JSON.parse(localData) : []
-    })
+    const localData = localStorage.getItem('TodoList') ?  
+        JSON.parse(localStorage.getItem('TodoList')) : []
+
+    const [TodoList, dispatch] = useReducer(reducer, localData)
 
     const InputStyle = {
         borderTop: "none",
@@ -76,19 +95,21 @@ function Todo(){
         
         e.preventDefault();
         
-        const taget = e.target.children[0]
+        const target = e.target.children[0]
         
-        const todo = {
-            text : taget.value,
-            id : Date.now(),
-            complete : false
-        }
+        dispatch({
+            type : 'add',
+            TodoList : {
+                text : target.value,
+                id : Date.now(),
+                complete : false
+            }    
+        },[TodoList])
         
-        SetTodoList([...TodoList, todo])
-        
-        taget.value = ''
+        target.value = ''
         
     }
+
 
     return(
         <div style={{textAlign : "center"}}>
@@ -98,7 +119,7 @@ function Todo(){
                  style={InputStyle} 
                  placeholder="Write a To Do and Press Enter" />
             </form>
-            <TodoPaint TodoList={TodoList} SetTodoList={SetTodoList}/>
+            <TodoPaint TodoList={TodoList} key={TodoList.id} dispatch={dispatch}/>
         </div>
     )
 }

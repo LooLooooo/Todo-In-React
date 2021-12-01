@@ -1,7 +1,10 @@
-import React, { useEffect, useReducer, useState } from "react";
+import React, { useContext, useEffect, useReducer } from "react";
+import useInput from '../Hook/useInput';
+import produce from 'immer';
 
+function TodoPaint({TodoList}){
 
-function TodoPaint({TodoList, dispatch}){
+    const dispatch = useContext(UserDispath)
 
     useEffect( () => {
         localStorage.setItem("TodoList",JSON.stringify(TodoList))
@@ -27,7 +30,7 @@ function TodoPaint({TodoList, dispatch}){
         })
 
     }
-   
+    
     const deleteTodo = (e) => {
         const id = e.target.parentElement.children[0].value
         dispatch({
@@ -35,7 +38,7 @@ function TodoPaint({TodoList, dispatch}){
             id
         })
     }
-
+    
     return (
         <div>
             {TodoList.map( (todos) => ( 
@@ -50,30 +53,14 @@ function TodoPaint({TodoList, dispatch}){
     )
 }
 
-
-function reducer(state, action){
-    switch(action.type){
-        case 'add' :
-            return [...state, action.TodoList]
-        case 'complete' :   
-            return state.map( todo => 
-                todo.id === parseInt(action.id) ? { ...todo, complete : !todo.complete } : todo 
-            )
-        case 'delete' :
-            return state.filter( todo => todo.id !== parseInt(action.id))
-        default : 
-            return state
-    }
-}
-
 function Todo(){
 
     const localData = localStorage.getItem('TodoList') ?  
         JSON.parse(localStorage.getItem('TodoList')) : []
 
-    const [TodoList, dispatch] = useReducer(reducer, localData)
+    const [TodoList, dispatch, handleToDoSubmit] = useInput(localData)
 
-    const InputStyle = {
+    const TodoInputStyle = {
         borderTop: "none",
         borderLeft: "none",
         borderRight: "none",
@@ -85,43 +72,21 @@ function Todo(){
     useEffect( () => {
         localStorage.setItem("TodoList",JSON.stringify(TodoList))
     }, [TodoList])
-
     
-    function saveTodoList(){
-        localStorage.setItem('todolist', JSON.stringify(TodoList))
-    }
-    
-    const handleToDoSubmit = (e) => {
-        
-        e.preventDefault();
-        
-        const target = e.target.children[0]
-        
-        dispatch({
-            type : 'add',
-            TodoList : {
-                text : target.value,
-                id : Date.now(),
-                complete : false
-            }    
-        },[TodoList])
-        
-        target.value = ''
-        
-    }
-
-
     return(
+        <UserDispath.Provider value={dispatch}>        
         <div style={{textAlign : "center"}}>
             <form onSubmit={handleToDoSubmit}>
                 <input
                  type="text"
-                 style={InputStyle} 
+                 style={TodoInputStyle} 
                  placeholder="Write a To Do and Press Enter" />
             </form>
-            <TodoPaint TodoList={TodoList} key={TodoList.id} dispatch={dispatch}/>
+            <TodoPaint TodoList={TodoList} key={TodoList.id} />
         </div>
+    </UserDispath.Provider>
     )
 }
 
+export const UserDispath = React.createContext(null)
 export default Todo

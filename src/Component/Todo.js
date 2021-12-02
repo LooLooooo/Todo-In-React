@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useReducer } from "react";
+import React, { useContext, useEffect, useMemo, useReducer} from "react";
 import useInput from '../Hook/useInput';
 import produce from 'immer';
 
@@ -6,6 +6,11 @@ function TodoPaint({TodoList}){
 
     const dispatch = useContext(UserDispath)
 
+    function countCompleteTodo(TodoList){
+        console.log("목록 확인중...")
+        return TodoList.filter(todo => todo.complete).length
+    }
+    
     useEffect( () => {
         localStorage.setItem("TodoList",JSON.stringify(TodoList))
     }, [TodoList])
@@ -38,18 +43,24 @@ function TodoPaint({TodoList}){
             id
         })
     }
+
+    const count = useMemo( () => countCompleteTodo(TodoList), [TodoList])
     
     return (
+        <>
         <div>
             {TodoList.map( (todos) => ( 
             <div>
                 <input type="hidden" value={todos.id} />
                 <input type="hidden" value={todos.complete} />
-                <span onClick={fontChange}>{todos.text}</span>
+                <span style={todos.complete ? { color : "darkgray" } : {color : "" }}
+                onClick={fontChange}>{todos.text}</span>
                 <button onClick={deleteTodo}>삭제</button>
-            </div>  
+            </div>
             ))}
         </div>
+            <div>완료한 목록 : {count} </div>
+        </>
     )
 }
 
